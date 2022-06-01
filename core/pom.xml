@@ -7,7 +7,7 @@
   <!-- The Basics -->
   <groupId>net.pincette</groupId>
   <artifactId>jslt</artifactId>
-  <version>0.1.11</version>
+  <version>0.1.12</version>
   <packaging>jar</packaging>
   <name>jslt</name>
   <description>JSLT as a module</description>
@@ -48,20 +48,18 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.12.5</version>
+      <version>2.13.3</version>
     </dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.13.2</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-yaml</artifactId>
-      <version>2.12.5</version>
+      <version>2.13.3</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -150,7 +148,7 @@
                 <argument>
                   -OUTPUT_DIRECTORY=${project.build.directory}/generated-sources/com/schibsted/spt/data/jslt/parser
                 </argument>
-                <argument>${project.basedir}/src/main/javacc/jslt.jj</argument>
+                <argument>${project.basedir}/src/main/jjtree/jslt.jjt</argument>
               </arguments>
             </configuration>
           </execution>
@@ -170,7 +168,7 @@
                   -OUTPUT_DIRECTORY=${project.build.directory}/generated-sources/com/schibsted/spt/data/jslt/parser
                 </argument>
                 <argument>
-                  ${project.build.directory}/generated-sources/com/schibsted/spt/data/jslt/parser/jslt.jj.jj
+                  ${project.build.directory}/generated-sources/com/schibsted/spt/data/jslt/parser/jslt.jj
                 </argument>
               </arguments>
             </configuration>
