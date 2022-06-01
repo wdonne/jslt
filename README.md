@@ -11,7 +11,7 @@ JSLT can be used as:
  * a filter/check language to test JSON objects (`starts-with(.foo.bar[0], "http://")`) ,
  * a transformation language to convert between JSON formats.
 
-Here is an example transform:
+An example transform:
 
 ```
 {
@@ -71,7 +71,7 @@ To include JSLT in your project, depend on:
 <dependency>
   <groupId>com.schibsted.spt.data</groupId>
   <artifactId>jslt</artifactId>
-  <version>0.1.11</version>
+  <version>0.1.12</version>
 </dependency>
 ```
 
@@ -129,7 +129,10 @@ more queries.
 
 ## Building JSLT
 
-To build JSLT, run `./gradlew jar` or `./gradlew shadowJar`.
+To build JSLT as a jar file, run `./gradlew jar`.
+
+To build a fat jar with all dependencies included, run `./gradlew
+shadowJar`.
 
 To run the tests: `./gradlew check`.
 
@@ -153,7 +156,13 @@ things) some of the ways Schibsted uses JSLT.
 
 [Visual Studio syntax highlighter](https://marketplace.visualstudio.com/items?itemName=jarno-rajala.jslt-lang) for JSLT.
 
+[IntelliJ JSLT plugin](https://github.com/fuchsst/jslt-intellij-plugin).
+
 [Apache Camel JSLT component](https://camel.apache.org/components/latest/jslt-component.html).
+
+[How Willhaben.at uses JSLT with Kafka Connect](https://tech.willhaben.at/kafka-connect-custom-single-message-transform-using-jslt-2fc57ae98395)
+
+[IBM Cloud Pak for Business Automation](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/21.0.x?topic=specification-event-selectors-transformers).
 
 [Pincette event sourcing framework uses JSLT](https://github.com/json-event-sourcing/pincette-jes).
 

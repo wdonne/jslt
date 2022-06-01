@@ -28,8 +28,10 @@ import java.util.Set;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.security.MessageDigest;
@@ -102,6 +104,7 @@ public class BuiltinFunctions {
     functions.put("to-json", new BuiltinFunctions.ToJson());
     functions.put("replace", new BuiltinFunctions.Replace());
     functions.put("trim", new BuiltinFunctions.Trim());
+    functions.put("uuid", new BuiltinFunctions.Uuid());
 
     // BOOLEAN
     functions.put("not", new BuiltinFunctions.Not());
@@ -335,7 +338,7 @@ public class BuiltinFunctions {
 
   // ===== TEST
 
-  public static class Test extends AbstractFunction {
+  public static class Test extends AbstractRegexpFunction {
     public Test() {
       super("test", 2, 2);
     }
@@ -363,7 +366,7 @@ public class BuiltinFunctions {
   // names of the named groups are. so we have to use regexps to
   // parse the regexps. (lots of swearing omitted.)
 
-  public static class Capture extends AbstractFunction {
+  public static class Capture extends AbstractRegexpFunction {
     static Map<String, JstlPattern> cache = new BoundedCache(1000);
 
     public Capture() {
@@ -436,7 +439,18 @@ public class BuiltinFunctions {
 
   // ===== SPLIT
 
-  public static class Split extends AbstractFunction {
+  private static abstract class AbstractRegexpFunction extends AbstractFunction
+      implements RegexpFunction {
+      AbstractRegexpFunction(String name, int min, int max) {
+          super(name, min, max);
+      }
+
+      public int regexpArgumentNumber() {
+          return 1;
+      }
+  }
+
+  public static class Split extends AbstractRegexpFunction {
 
     public Split() {
       super("split", 2, 2);
@@ -898,7 +912,7 @@ public class BuiltinFunctions {
 
   // ===== REPLACE
 
-  public static class Replace extends AbstractFunction {
+  public static class Replace extends AbstractRegexpFunction {
 
     public Replace() {
       super("replace", 3, 3);
@@ -961,6 +975,48 @@ public class BuiltinFunctions {
       return new TextNode(string.trim());
     }
   }
+
+  // ===== UUID
+
+  public static class Uuid extends AbstractFunction {
+
+    public Uuid() {
+      super("uuid", 0, 2);
+    }
+
+    private long maskMSB(long number) {
+      final long version = 1 << 12;
+      long least12SignificantBit = (number & 0x000000000000FFFFL) >> 4;
+      return (number & 0xFFFFFFFFFFFF0000L) + version + least12SignificantBit;
+    }
+
+    private long maskLSB(long number) {
+      final long LSB_MASK = 0x3FFFFFFFFFFFFFFFL;
+      final long LSB_VARIANT3_BITFLAG = 0x8000000000000000L;
+      return (number & LSB_MASK) + LSB_VARIANT3_BITFLAG;
+    }
+
+    public JsonNode call(JsonNode input, JsonNode[] arguments) {
+      String uuid;
+      if (arguments.length == 0) {
+        uuid = UUID.randomUUID().toString();
+      } else if (arguments.length == 2) {
+        // NIL UUID is a special case defined in 4.1.7 of the RFC (https://www.ietf.org/rfc/rfc4122.txt)
+        if (arguments[0].isNull() && arguments[1].isNull()) {
+          uuid = "00000000-0000-0000-0000-000000000000";
+        } else {
+          long msb = NodeUtils.number(arguments[0], null).asLong();
+          long lsb = NodeUtils.number(arguments[1], null).asLong();
+          uuid = new UUID(maskMSB(msb), maskLSB(lsb)).toString();
+        }
+      } else {
+        throw new JsltException("Build-in UUID function must be called with either none or two parameters.");
+      }
+
+      return new TextNode(uuid);
+    }
+  }
+
 
   // ===== JOIN
 
@@ -1314,10 +1370,14 @@ public class BuiltinFunctions {
   // shared regexp cache
   static Map<String, Pattern> cache = new BoundedCache(1000);
 
-  private synchronized static Pattern getRegexp(String regexp) {
+  synchronized static Pattern getRegexp(String regexp) {
     Pattern p = cache.get(regexp);
     if (p == null) {
-      p = Pattern.compile(regexp);
+      try {
+        p = Pattern.compile(regexp);
+      } catch (PatternSyntaxException e) {
+        throw new JsltException("Syntax error in regular expression '" + regexp + "'", e);
+      }
       cache.put(regexp, p);
     }
     return p;
