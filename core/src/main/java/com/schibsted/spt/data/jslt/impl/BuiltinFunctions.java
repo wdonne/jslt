@@ -45,6 +45,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
@@ -311,9 +312,10 @@ public class BuiltinFunctions {
 
   public static class HashInt extends AbstractFunction {
 
-    private static ObjectMapper mapper = new ObjectMapper()
+    private static ObjectMapper mapper = JsonMapper.builder()
             .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
             .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
+            .build()
             ;
     private static ObjectWriter writer = mapper.writer();
 
@@ -506,19 +508,12 @@ public class BuiltinFunctions {
     }
   }
 
-
   // ===== SHA256
 
   public static class Sha256 extends AbstractFunction {
-    final MessageDigest messageDigest;
 
     public Sha256() {
       super("sha256-hex", 1, 1);
-      try {
-        messageDigest = MessageDigest.getInstance("SHA-256");
-      } catch (NoSuchAlgorithmException e) {
-        throw new JsltException("sha256-hex: could not find sha256 algorithm " + e);
-      }
     }
 
     public JsonNode call(JsonNode input, JsonNode[] arguments) {
@@ -528,7 +523,14 @@ public class BuiltinFunctions {
 
       String message = NodeUtils.toString(arguments[0], false);
 
-      byte[] bytes = this.messageDigest.digest(message.getBytes(UTF_8));
+      MessageDigest messageDigest;
+      try {
+        messageDigest = MessageDigest.getInstance("SHA-256");
+      } catch (NoSuchAlgorithmException e) {
+        throw new JsltException("sha256-hex: could not find sha256 algorithm " + e);
+      }
+
+      byte[] bytes = messageDigest.digest(message.getBytes(UTF_8));
       String string = Utils.printHexBinary(bytes);
 
       return new TextNode(string);
@@ -801,8 +803,8 @@ public class BuiltinFunctions {
       ArrayNode arrayOut = NodeUtils.mapper.createArrayNode();
       for (int ix = 0; ix < arrayIn.size(); ix++) {
         ObjectNode pair = NodeUtils.mapper.createObjectNode();
-        pair.put("index", new IntNode(ix));
-        pair.put("value", arrayIn.get(ix));
+        pair.set("index", new IntNode(ix));
+        pair.set("value", arrayIn.get(ix));
         arrayOut.add(pair);
       }
       return arrayOut;
