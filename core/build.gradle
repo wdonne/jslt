@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4.2'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.2'
@@ -27,7 +27,7 @@ ext {
 }
 
 group 'com.schibsted.spt.data'
-version "0.1.13"
+version "0.1.14"
 project.description "A JSON query and transformation language"
 
 check {
